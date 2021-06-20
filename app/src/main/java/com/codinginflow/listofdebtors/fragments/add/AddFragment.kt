@@ -3,7 +3,6 @@ package com.codinginflow.listofdebtors.fragments.add
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.os.Bundle
-import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -51,16 +50,28 @@ class AddFragment : Fragment(), DatePickerDialog.OnDateSetListener,
         view.btn_add.setOnClickListener {
             insertDataToDatabase()
         }
+
         return view
     }
 
     private fun insertDataToDatabase() {
         val name = et_firstName.text.toString()
-        val amount = et_amount.text.toString().toInt()
+        val amount = et_amount.text.toString()
         val note = et_note.text.toString()
-        val timestamp = date
+        val timestamp = if (date == 0.toLong()) {
+            val dateNow = System.currentTimeMillis()
+            dateNow
+        } else {
+            date
+        }
 
-        if (inputCheck(name, amount, note, timestamp)) {
+
+        if (et_firstName.text.toString().equals("") || et_amount.text.toString()
+                .equals("") || et_note.text.toString().equals("")
+        ) {
+            Toast.makeText(requireContext(), "Пожалуйста, заполните все поля", Toast.LENGTH_LONG)
+                .show()
+        } else {
             // Create User object
             val user = User(
                 0,
@@ -71,26 +82,16 @@ class AddFragment : Fragment(), DatePickerDialog.OnDateSetListener,
             )
             // Add Data to Database
             mUserViewModel.addUser(user)
-            Toast.makeText(requireContext(), "Должник успешно добавлен!", Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(), "Пидорас успешно добавлен!", Toast.LENGTH_LONG).show()
             // Navigate back
             findNavController().navigate(R.id.action_addFragment_to_listFragment)
-        } else {
-            Toast.makeText(requireContext(), "Пожалуйста, заполните все поля", Toast.LENGTH_LONG)
-                .show()
         }
-    }
 
-    private fun inputCheck(name: String, amount: Int, note: String, timestamp: Long): Boolean {
-        return !(TextUtils.isEmpty(name) && TextUtils.isEmpty(amount.toString()) && TextUtils.isEmpty(
-            note
-        ) && TextUtils.isEmpty(
-            timestamp.toString()
-        ))
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        et_amount.transformationMethod = null
         pickDate()
     }
 
@@ -129,6 +130,6 @@ class AddFragment : Fragment(), DatePickerDialog.OnDateSetListener,
         date = startTime
         val dateCurrent = DateFormat.getDateTimeInstance().format(startTime)
 
-        et_timestamp.text = "$dateCurrent"
+        et_timestamp.text = dateCurrent
     }
 }

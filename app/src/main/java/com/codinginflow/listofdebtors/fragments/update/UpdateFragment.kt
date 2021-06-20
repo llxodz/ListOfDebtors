@@ -4,7 +4,6 @@ import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.os.Bundle
-import android.text.TextUtils
 import android.view.*
 import android.widget.DatePicker
 import android.widget.TimePicker
@@ -52,6 +51,13 @@ class UpdateFragment : Fragment(), DatePickerDialog.OnDateSetListener,
             updateItem()
         }
 
+        val date = DateFormat.getDateInstance().format(args.currentUser.timestamp)
+
+        view.et_firstName_update.setText(args.currentUser.name)
+        view.et_amount_update.setText(args.currentUser.amount.toString())
+        view.et_note_update.setText(args.currentUser.note)
+        view.et_timestamp_update.text = date
+
         // Add menu
         setHasOptionsMenu(true)
 
@@ -61,16 +67,30 @@ class UpdateFragment : Fragment(), DatePickerDialog.OnDateSetListener,
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        et_amount_update.transformationMethod = null
         pickDate()
     }
 
     private fun updateItem() {
         val name = et_firstName_update.text.toString()
-        val amount = et_amount_update.text.toString().toInt()
+        val amount = et_amount_update.text.toString().toDouble()
         val note = et_note_update.text.toString()
-        val timestamp = date
+        val timestamp = if (date == 0.toLong()) {
+            val dateNow = System.currentTimeMillis()
+            dateNow
+        } else {
+            date
+        }
 
-        if (inputCheck(name, amount, note, timestamp)) {
+        if (et_firstName_update.text.toString().equals("") || et_amount_update.text.toString()
+                .equals("") || et_note_update.text.toString().equals("")
+        ) {
+            Toast.makeText(
+                requireContext(),
+                "Пожалуйста, введите информацию корректно",
+                Toast.LENGTH_LONG
+            ).show()
+        } else {
             // Update User object
             val updatedUser = User(args.currentUser.id, name, amount.toDouble(), note, timestamp)
             // Add Data to Database
@@ -81,21 +101,7 @@ class UpdateFragment : Fragment(), DatePickerDialog.OnDateSetListener,
                 Toast.LENGTH_LONG
             ).show()
             findNavController().navigate(R.id.action_updateFragment_to_listFragment)
-        } else {
-            Toast.makeText(
-                requireContext(),
-                "Пожалуйста, введите информацию корректно",
-                Toast.LENGTH_LONG
-            ).show()
         }
-    }
-
-    private fun inputCheck(name: String, amount: Int, note: String, timestamp: Long): Boolean {
-        return !(TextUtils.isEmpty(name) && TextUtils.isEmpty(amount.toString()) && TextUtils.isEmpty(
-            note
-        ) && TextUtils.isEmpty(
-            timestamp.toString()
-        ))
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
